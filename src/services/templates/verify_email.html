@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Verify email</title>
+  </head>
+  <body>
+    <p>Hi {{ username }},</p>
+    <p>Please confirm your email address by clicking the link below:</p>
+    <p>
+      <a href="{{ host }}api/auth/confirmed_email/{{ token }}">Verify email</a>
+    </p>
+    <p>If you did not sign up, ignore this email.</p>
+  </body>
+</html>
+
