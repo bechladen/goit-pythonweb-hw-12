@@ -26,6 +26,15 @@ class RequestEmail(BaseModel):
     email: EmailStr
 
 
+class RequestPasswordReset(BaseModel):
+    email: EmailStr
+
+
+class ConfirmPasswordReset(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6, max_length=128)
+
+
 class UserResponse(UserBase):
     id: int
     avatar: str | None = None

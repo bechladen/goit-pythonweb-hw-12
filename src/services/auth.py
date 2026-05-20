@@ -32,6 +32,34 @@ def create_email_token(*, email: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
+def create_password_reset_token(*, email: str) -> str:
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=30)
+    payload = {
+        "sub": email,
+        "scope": "password_reset",
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+    }
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
+def get_email_from_password_reset_token(token: str) -> str:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("scope") != "password_reset":
+            raise ValueError("Invalid scope")
+        email: str | None = payload.get("sub")
+        if not email:
+            raise ValueError("Missing sub")
+        return email
+    except (JWTError, ValueError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid password reset token",
+        ) from e
+
+
 def get_email_from_token(token: str) -> str:
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])

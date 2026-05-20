@@ -1,11 +1,20 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.cache import invalidate_cached_user
 from src.database import get_db
 from src.repository.users import UsersRepository
-from src.schemas import LoginRequest, RequestEmail, TokenResponse, UserCreate, UserResponse
-from src.services.auth import create_access_token, get_email_from_token
-from src.services.email import send_verification_email
+from src.schemas import (
+    ConfirmPasswordReset,
+    LoginRequest,
+    RequestEmail,
+    RequestPasswordReset,
+    TokenResponse,
+    UserCreate,
+    UserResponse,
+)
+from src.services.auth import create_access_token, get_email_from_password_reset_token, get_email_from_token
+from src.services.email import send_password_reset_email, send_verification_email
 from src.services.passwords import hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -91,4 +100,35 @@ async def request_email(
             base_url=str(request.base_url),
         )
     return {"message": "Check your email for verification link"}
+
+
+@router.post("/request_password_reset")
+async def request_password_reset(
+    body: RequestPasswordReset,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    repo = UsersRepository(db)
+    user = await repo.get_by_email(str(body.email))
+    if user:
+        background_tasks.add_task(
+            send_password_reset_email,
+            email=user.email,
+            username=user.username,
+            base_url=str(request.base_url),
+        )
+    # same response to avoid email enumeration
+    return {"message": "If the email exists, a reset token was sent"}
+
+
+@router.post("/confirm_password_reset")
+async def confirm_password_reset(body: ConfirmPasswordReset, db: AsyncSession = Depends(get_db)):
+    email = get_email_from_password_reset_token(body.token)
+    repo = UsersRepository(db)
+    user = await repo.update_password_by_email(email=email, hashed_password=hash_password(body.new_password))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Reset error")
+    await invalidate_cached_user(user.username)
+    return {"message": "Password updated"}
 

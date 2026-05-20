@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr
 
-from src.services.auth import create_email_token
+from src.services.auth import create_email_token, create_password_reset_token
 from src.settings import settings
 
 
@@ -52,3 +52,19 @@ async def send_verification_email(*, email: EmailStr, username: str, base_url: s
     fm = FastMail(_mail_config())
     await fm.send_message(message, template_name="verify_email.html")
 
+
+async def send_password_reset_email(*, email: EmailStr, username: str, base_url: str) -> None:
+    """Надсилає лист для скидання пароля (no-op, якщо mail не налаштований)."""
+    if not _is_mail_configured():
+        return
+
+    token = create_password_reset_token(email=str(email))
+    message = MessageSchema(
+        subject="Reset your password",
+        recipients=[str(email)],
+        template_body={"username": username, "host": base_url, "token": token},
+        subtype=MessageType.html,
+    )
+
+    fm = FastMail(_mail_config())
+    await fm.send_message(message, template_name="reset_password.html")

@@ -57,3 +57,13 @@ class UsersRepository:
         await self.db.refresh(user)
         return user
 
+    async def update_password_by_email(self, *, email: str, hashed_password: str) -> User | None:
+        """Оновлює пароль користувача за email; повертає користувача або `None`."""
+        user = await self.get_by_email(email)
+        if user is None:
+            return None
+        user.hashed_password = hashed_password
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
