@@ -91,7 +91,7 @@ async def request_email(
     if user and user.confirmed:
         return {"message": "Email already confirmed"}
 
-    # Return same response regardless of existence to avoid email enumeration
+    # Повертаємо однакову відповідь незалежно від існування email, щоб уникнути enumeration.
     if user:
         background_tasks.add_task(
             send_verification_email,
@@ -118,7 +118,7 @@ async def request_password_reset(
             username=user.username,
             base_url=str(request.base_url),
         )
-    # same response to avoid email enumeration
+    # Однакова відповідь, щоб уникнути email enumeration.
     return {"message": "If the email exists, a reset token was sent"}
 
 

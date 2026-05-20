@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     AUTO_CREATE_TABLES: bool = True
 
-    # Redis cache
+    # Redis кеш
     REDIS_URL: str | None = None
     USER_CACHE_TTL_SECONDS: int = 300
 
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_SECONDS: int = 3600
 
-    # Email (verification)
+    # Email (верифікація)
     MAIL_USERNAME: str | None = None
     MAIL_PASSWORD: str | None = None
     MAIL_FROM: str | None = None
@@ -27,13 +27,13 @@ class Settings(BaseSettings):
     MAIL_USE_CREDENTIALS: bool = True
     MAIL_VALIDATE_CERTS: bool = True
 
-    # Cloudinary (avatars)
+    # Cloudinary (аватари)
     CLOUDINARY_NAME: str | None = None
     CLOUDINARY_API_KEY: str | None = None
     CLOUDINARY_API_SECRET: str | None = None
 
     # CORS
-    # Comma-separated list, e.g. "http://localhost:3000,http://127.0.0.1:3000"
+    # Список через кому, напр. "http://localhost:3000,http://127.0.0.1:3000"
     CORS_ORIGINS: str = "*"
 
     model_config = ConfigDict(

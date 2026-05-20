@@ -11,8 +11,9 @@ def _is_cloudinary_configured() -> bool:
 
 def upload_avatar(*, file_obj, username: str) -> str | None:
     """
-    Upload avatar image to Cloudinary and return a transformed URL.
-    Returns None if Cloudinary is not configured.
+    Завантажує аватар у Cloudinary та повертає трансформований URL.
+
+    Повертає `None`, якщо Cloudinary не налаштований.
     """
     if not _is_cloudinary_configured():
         return None

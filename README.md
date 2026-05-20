@@ -12,6 +12,11 @@
   - видалити контакт
 - **Пошук** контактів за `first_name`, `last_name`, `email` (query-параметри)
 - **Найближчі дні народження**: список контактів, у яких день народження на найближчі \(N\) днів (за замовчуванням 7)
+- **Auth (JWT)**: реєстрація / логін / підтвердження email
+- **Reset password**: запит на скидання + підтвердження токеном
+- **Ролі**: `user` / `admin`
+  - лише **admin** може оновлювати аватар
+- **Redis кеш**: кешування поточного користувача в `get_current_user`
 - **Swagger / OpenAPI** документація автоматично
 
 ### Дані контакту
@@ -27,32 +32,59 @@
 
 ## Запуск
 
-### 1) Підняти PostgreSQL
+### Варіант A: Docker Compose (рекомендовано)
 
-Рекомендовано через Docker Compose:
+1) Створіть `.env` на основі `.env.example`.
 
-```bash
-docker compose up -d
+Мінімально потрібні значення для Docker:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/contacts_db
+AUTO_CREATE_TABLES=False
+
+REDIS_URL=redis://redis:6379/0
+USER_CACHE_TTL_SECONDS=300
+
+JWT_SECRET=change_me_now
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_SECONDS=3600
 ```
 
-База буде доступна на `localhost:5432`.
+2) Запустіть сервіси:
 
-### 2) Налаштувати змінні оточення
+```bash
+docker compose up --build -d
+```
 
-Створіть файл `.env` на основі `.env.example` і за потреби змініть `DATABASE_URL`:
+3) Застосуйте міграції:
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+4) Відкрийте документацію:
+
+- Swagger UI: `http://localhost:8000/docs`
+
+---
+
+### Варіант B: локально (Poetry)
+
+1) Створіть `.env` на основі `.env.example` і задайте мінімум:
 
 ```env
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/contacts_db
+JWT_SECRET=change_me_now
 ```
 
-### 3) Встановити залежності (Poetry)
+2) Встановіть залежності:
 
 ```bash
 poetry lock
 poetry install
 ```
 
-### 4) Запустити API
+3) Запустіть API:
 
 Варіант A (FastAPI CLI):
 
@@ -75,36 +107,41 @@ poetry run uvicorn main:app --reload
 
 ---
 
-## Ендпоінти
+## Тести та покриття
 
-Базовий префікс: `/api`
+Запуск усіх тестів:
 
-### Contacts
+```bash
+poetry run pytest
+```
 
-- **Створити контакт**
-  - `POST /api/contacts`
+Покриття (ціль: **>= 75%**):
 
-- **Список контактів (з пошуком та пагінацією)**
-  - `GET /api/contacts?skip=0&limit=100&q=...&first_name=...&last_name=...&email=...`
-  - `q` шукає одразу по **імені/прізвищу/email** (OR-логіка)
+```bash
+poetry run pytest --cov=src --cov-report=term-missing
+```
 
-- **Отримати контакт**
-  - `GET /api/contacts/{contact_id}`
+HTML-звіт:
 
-- **Оновити контакт**
-  - `PUT /api/contacts/{contact_id}`
-  - У тілі можна передавати тільки ті поля, які треба змінити.
+```bash
+poetry run pytest --cov=src --cov-report=html
+open htmlcov/index.html
+```
 
-- **Видалити контакт**
-  - `DELETE /api/contacts/{contact_id}`
+---
 
-- **Дні народження на найближчі N днів**
-  - `GET /api/contacts/birthdays?days=7`
+## Sphinx документація коду
+
+```bash
+poetry run sphinx-build -b html docs docs/_build/html
+open docs/_build/html/index.html
+```
 
 ---
 
 ## Примітки
 
 - Проєкт **асинхронний**: використовується `postgresql+asyncpg` і `AsyncSession`.
-- Для простоти таблиці створюються автоматично на старті застосунку (`create_all`).
-  - У реальних проєктах краще використовувати **міграції Alembic**.
+- Для керування схемою БД використовується **Alembic**.
+- `AUTO_CREATE_TABLES=True` — навчальний режим (створює таблиці через `create_all()` на старті).
+  - Для нормальної роботи міграцій встановіть `AUTO_CREATE_TABLES=False`.
