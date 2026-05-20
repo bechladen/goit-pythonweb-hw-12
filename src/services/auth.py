@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.cache import get_cached_user, set_cached_user
 from src.database import get_db
 from src.repository.users import UsersRepository
 from src.settings import settings
@@ -65,9 +66,15 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
+    cached = await get_cached_user(username)
+    if cached is not None:
+        return cached
+
     repo = UsersRepository(db)
     user = await repo.get_by_username(username)
     if user is None:
         raise credentials_exception
+
+    await set_cached_user(user)
     return user
 

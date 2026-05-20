@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     AUTO_CREATE_TABLES: bool = True
 
+    # Redis cache
+    REDIS_URL: str | None = None
+    USER_CACHE_TTL_SECONDS: int = 300
+
     # JWT
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"

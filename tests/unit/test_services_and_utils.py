@@ -69,3 +69,22 @@ def test_create_email_token_and_parse_roundtrip(monkeypatch):
     email = auth_module.get_email_from_token(token)
     assert email == "u@example.com"
 
+
+@pytest.mark.asyncio
+async def test_get_current_user_uses_cache(monkeypatch):
+    class DummyDB:  # pragma: no cover
+        pass
+
+    async def fake_get_cached_user(username: str):
+        from src.models import User
+
+        return User(id=1, username=username, email="u@example.com", hashed_password="x")
+
+    repo_mock = pytest.MonkeyPatch()
+    monkeypatch.setattr(auth_module, "get_cached_user", fake_get_cached_user)
+    monkeypatch.setattr(auth_module, "UsersRepository", lambda db: repo_mock)  # should not be used
+
+    token = auth_module.create_access_token(subject="u")
+    user = await auth_module.get_current_user(token=token, db=DummyDB())
+    assert user.username == "u"
+

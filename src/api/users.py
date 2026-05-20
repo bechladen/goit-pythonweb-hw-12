@@ -6,6 +6,7 @@ from src.schemas import UserResponse
 from src.services.auth import get_current_user
 from src.repository.users import UsersRepository
 from src.database import get_db
+from src.cache import invalidate_cached_user
 from src.services.cloudinary_upload import upload_avatar
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -32,5 +33,7 @@ async def update_avatar_user(
         )
 
     repo = UsersRepository(db)
-    return await repo.update_avatar(user=user, avatar_url=avatar_url)
+    updated = await repo.update_avatar(user=user, avatar_url=avatar_url)
+    await invalidate_cached_user(user.username)
+    return updated
 
