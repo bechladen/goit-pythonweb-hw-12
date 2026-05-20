@@ -4,6 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from src import config as config_module
+from src.settings import settings as settings_obj
 from src.services import auth as auth_module
 from src.services import cloudinary_upload as cloudinary_module
 from src.services import email as email_module
@@ -17,13 +18,13 @@ def test_hash_and_verify_password_roundtrip():
 
 
 def test_get_database_url_normalizes_driver(monkeypatch):
-    monkeypatch.setattr(config_module.settings, "DATABASE_URL", "postgresql://u:p@h:5432/db")
+    monkeypatch.setattr(settings_obj, "DATABASE_URL", "postgresql://u:p@h:5432/db")
     assert config_module.get_database_url().startswith("postgresql+asyncpg://")
 
 
 def test_get_database_url_keeps_asyncpg(monkeypatch):
     monkeypatch.setattr(
-        config_module.settings,
+        settings_obj,
         "DATABASE_URL",
         "postgresql+asyncpg://u:p@h:5432/db",
     )
