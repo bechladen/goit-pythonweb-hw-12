@@ -24,6 +24,7 @@ cloudinary = "^1.41.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.6.0"
+sphinx = "^8.0.0"
 
 [tool.ruff]
 line-length = 100

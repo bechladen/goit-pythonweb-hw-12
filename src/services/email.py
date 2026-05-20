@@ -8,6 +8,7 @@ from src.settings import settings
 
 
 def _is_mail_configured() -> bool:
+    """Повертає `True`, якщо налаштовані всі потрібні змінні для email."""
     required = [
         settings.MAIL_USERNAME,
         settings.MAIL_PASSWORD,
@@ -19,6 +20,7 @@ def _is_mail_configured() -> bool:
 
 
 def _mail_config() -> ConnectionConfig:
+    """Будує `ConnectionConfig` для FastAPI-Mail зі значень `settings`."""
     return ConnectionConfig(
         MAIL_USERNAME=settings.MAIL_USERNAME,
         MAIL_PASSWORD=settings.MAIL_PASSWORD,
@@ -35,6 +37,7 @@ def _mail_config() -> ConnectionConfig:
 
 
 async def send_verification_email(*, email: EmailStr, username: str, base_url: str) -> None:
+    """Надсилає лист-підтвердження email (no-op, якщо mail не налаштований)."""
     if not _is_mail_configured():
         return
 

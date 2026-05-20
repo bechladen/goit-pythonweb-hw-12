@@ -16,6 +16,7 @@ class DatabaseSessionManager:
     """
 
     def __init__(self, url: str):
+        """Ініціалізує engine та фабрику сесій для заданого URL."""
         self._engine: AsyncEngine = create_async_engine(url, echo=False)
         self._session_maker: async_sessionmaker[AsyncSession] = async_sessionmaker(
             bind=self._engine,
@@ -26,6 +27,7 @@ class DatabaseSessionManager:
 
     @contextlib.asynccontextmanager
     async def session(self) -> AsyncSession:
+        """Контекстний менеджер сесії з rollback на `SQLAlchemyError`."""
         session = self._session_maker()
         try:
             yield session
@@ -36,6 +38,7 @@ class DatabaseSessionManager:
             await session.close()
 
     async def dispose(self) -> None:
+        """Закриває engine і звільняє ресурси."""
         await self._engine.dispose()
 
 

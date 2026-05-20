@@ -13,9 +13,11 @@ class ContactsRepository:
     """Рівень доступу до даних (DAL/Repository) для контактів."""
 
     def __init__(self, db: AsyncSession):
+        """Створює репозиторій з інʼєкцією `AsyncSession`."""
         self.db = db
 
     async def create(self, body: ContactCreate, user: User) -> Contact:
+        """Створює контакт, привʼязаний до `user`, і повертає його."""
         contact = Contact(**body.model_dump(), user_id=user.id)
         self.db.add(contact)
         await self.db.commit()
@@ -33,6 +35,7 @@ class ContactsRepository:
         q_last_name: str | None = None,
         q_email: str | None = None,
     ) -> list[Contact]:
+        """Повертає список контактів користувача з пагінацією та пошуком."""
         stmt = select(Contact).where(Contact.user_id == user.id)
 
         filters = []
@@ -64,11 +67,13 @@ class ContactsRepository:
         return result.scalars().all()
 
     async def get_by_id(self, contact_id: int, user: User) -> Contact | None:
+        """Повертає контакт за id, якщо він належить `user`, або `None`."""
         stmt = select(Contact).where(Contact.id == contact_id, Contact.user_id == user.id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def update(self, contact_id: int, body: ContactUpdate, user: User) -> Contact | None:
+        """Оновлює контакт частково; повертає оновлений контакт або `None`."""
         contact = await self.get_by_id(contact_id, user)
         if contact is None:
             return None
@@ -82,6 +87,7 @@ class ContactsRepository:
         return contact
 
     async def delete(self, contact_id: int, user: User) -> Contact | None:
+        """Видаляє контакт; повертає видалений обʼєкт або `None`."""
         contact = await self.get_by_id(contact_id, user)
         if contact is None:
             return None
