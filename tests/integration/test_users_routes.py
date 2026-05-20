@@ -45,6 +45,7 @@ async def test_update_avatar_success_with_auth(client, db_session, monkeypatch):
         email="ava1@example.com",
         password="secret12",
         confirmed=True,
+        role="admin",
     )
     token = create_access_token(subject=user.username)
 
@@ -55,4 +56,29 @@ async def test_update_avatar_success_with_auth(client, db_session, monkeypatch):
     )
     assert resp.status_code == 200, resp.text
     assert resp.json()["avatar"] == "http://example.com/ava1.png"
+
+
+@pytest.mark.asyncio
+async def test_update_avatar_forbidden_for_non_admin(client, db_session, monkeypatch):
+    def fake_upload_avatar(*, file_obj, username: str):
+        return f"http://example.com/{username}.png"
+
+    monkeypatch.setattr("src.api.users.upload_avatar", fake_upload_avatar)
+
+    user = await seed_user(
+        db=db_session,
+        username="ava2",
+        email="ava2@example.com",
+        password="secret12",
+        confirmed=True,
+        role="user",
+    )
+    token = create_access_token(subject=user.username)
+
+    resp = client.patch(
+        "/api/users/avatar",
+        headers=auth_headers(token),
+        files={"file": ("a.png", b"123", "image/png")},
+    )
+    assert resp.status_code == 403, resp.text
 

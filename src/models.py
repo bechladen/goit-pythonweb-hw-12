@@ -21,6 +21,7 @@ class User(Base):
 
     avatar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[str] = mapped_column(String(20), default="user", server_default="user")
 
     contacts: Mapped[list["Contact"]] = relationship(back_populates="user", cascade="all, delete")
 

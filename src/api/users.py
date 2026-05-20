@@ -4,6 +4,7 @@ from slowapi.util import get_remote_address
 
 from src.schemas import UserResponse
 from src.services.auth import get_current_user
+from src.services.roles import require_admin
 from src.repository.users import UsersRepository
 from src.database import get_db
 from src.cache import invalidate_cached_user
@@ -22,7 +23,7 @@ async def me(request: Request, user=Depends(get_current_user)):
 @router.patch("/avatar", response_model=UserResponse)
 async def update_avatar_user(
     file: UploadFile = File(...),
-    user=Depends(get_current_user),
+    user=Depends(require_admin),
     db=Depends(get_db),
 ):
     avatar_url = upload_avatar(file_obj=file.file, username=user.username)

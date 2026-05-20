@@ -13,12 +13,14 @@ async def seed_user(
     email: str,
     password: str,
     confirmed: bool = True,
+    role: str = "user",
 ) -> User:
     user = User(
         username=username,
         email=email,
         hashed_password=hash_password(password),
         confirmed=confirmed,
+        role=role,
     )
     db.add(user)
     await db.commit()
